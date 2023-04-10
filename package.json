@@ -1,11 +1,10 @@
 {
     "name": "@tobyg74/twitter-api-dl",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "description": "Scrapper for download Video & Image from Twitter",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
         "build": "tsc --build"
     },
     "repository": {
