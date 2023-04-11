@@ -5,24 +5,24 @@
 
 ## Installation
 
--   @tobyg74/twitter-api-dl requires Node.js v10+ to run.
+-   twitter-downloader requires Node.js v10+ to run.
 
 ### Install from NPM
 
 ```
-npm install @tobyg74/twitter-api-dl
+npm install twitter-downloader
 ```
 
 ### Install from YARN
 
 ```
-yarn add @tobyg74/twitter-api-dl
+yarn add twitter-downloader
 ```
 
 ## Usage
 
 ```js
-const { TwitterDL } = require("@tobyg74/twitter-api-dl");
+const { TwitterDL } = require("twitter-downloader");
 
 const twitter_video_url = "https://twitter.com/AnimeWithRJ/status/1645156770266923008";
 const twitter_image_url = "https://twitter.com/GenshinImpact/status/1645308130857820161";
