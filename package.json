@@ -1,7 +1,7 @@
 {
     "name": "@tobyg74/twitter-api-dl",
-    "version": "1.0.1",
-    "description": "Scrapper for download Video & Image from Twitter",
+    "version": "1.0.2",
+    "description": "Scraper for download Video & Image from Twitter",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
@@ -12,13 +12,11 @@
         "url": "git+https://github.com/TobyG74/twitter-api-dl.git"
     },
     "keywords": [
-        "ytdl",
-        "yt-downloader",
-        "youtube-api",
-        "youtube-downloader",
-        "youtube-dl",
-        "youtube-nowatermark",
-        "youtube"
+        "twitter-api",
+        "twitter-downloader",
+        "twitter-dl",
+        "twitter-nowatermark",
+        "twitter"
     ],
     "author": "Tobz",
     "license": "ISC",

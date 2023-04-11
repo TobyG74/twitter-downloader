@@ -69,23 +69,4 @@ TwitterDL(twitter_video_url).then((result) => {
     media: string[]
   }
 }
-
-// Media Image Result
-[
-  {
-    type: "image"
-    url: string
-    result: string
-  }
-]
-
-// Media Video Result
-[
-  {
-    type: "video"
-    url: string
-    duration: string
-    result: string[] // option of selecting video resolution
-  }
-]
 ```
