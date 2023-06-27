@@ -9,15 +9,16 @@ const getAuthorization = async () => {
     return data;
 };
 
-const getGuestToken = async () => {
+const getTokens = async () => {
     try {
+        const authToken = await getAuthorization();
         const { data } = await axios("https://api.twitter.com/1.1/guest/activate.json", {
             method: "POST",
             headers: {
-                Authorization: await getAuthorization(),
+                Authorization: authToken,
             },
         });
-        return data.guest_token;
+        return [data.guest_token, authToken];
     } catch {
         return null;
     }
@@ -31,11 +32,12 @@ export const TwitterDL = (url: string): Promise<TwitterResult> =>
                 status: "error",
                 message: "There was an error getting twitter id. Make sure your twitter url is correct!",
             });
+        const [guestToken, authToken] = await getTokens();
         axios(_twitterapi(id[1]), {
             method: "GET",
             headers: {
-                Authorization: await getAuthorization(),
-                "x-guest-token": await getGuestToken(),
+                Authorization: authToken,
+                "x-guest-token": guestToken,
                 "user-agent":
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
             },
