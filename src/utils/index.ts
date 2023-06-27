@@ -36,8 +36,7 @@ export const TwitterDL = (url: string): Promise<TwitterResult> =>
             headers: {
                 Authorization: await getAuthorization(),
                 "x-guest-token": await getGuestToken(),
-                "user-agent":
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
+                "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
             },
         })
             .then(({ data }) => {
@@ -65,33 +64,35 @@ export const TwitterDL = (url: string): Promise<TwitterResult> =>
                     favoriteCount: data.favorite_count,
                     hashtagCount: data.entities.hashtags.length,
                 };
-                const media = [];
-                data.extended_entities.media.forEach((v) => {
-                    const resultVideo: VideoVariants[] = [];
-                    if (v.video_info) {
-                        v.video_info.variants = v.video_info.variants.filter((x) => x.content_type === "video/mp4");
-                        v.video_info.variants.forEach((z) => {
-                            resultVideo.push({
-                                bitrate: z.bitrate,
-                                content_type: z.content_type,
-                                resolution: z.url.match(/([\d ]{2,5}[x][\d ]{2,5})/)[0],
-                                url: z.url,
+                let media = [];
+                if (data.extended_entities?.media) {
+                    data.extended_entities.media.forEach((v) => {
+                        const resultVideo: VideoVariants[] = [];
+                        if (v.video_info) {
+                            v.video_info.variants = v.video_info.variants.filter((x) => x.content_type === "video/mp4");
+                            v.video_info.variants.forEach((z) => {
+                                resultVideo.push({
+                                    bitrate: z.bitrate,
+                                    content_type: z.content_type,
+                                    resolution: z.url.match(/([\d ]{2,5}[x][\d ]{2,5})/)[0],
+                                    url: z.url,
+                                });
                             });
-                        });
-                        media.push({
-                            type: v.type,
-                            url: v.url,
-                            duration: new Date(v.video_info.duration_millis).toISOString().slice(11, 19),
-                            result: v.type === "video" ? resultVideo : v.media_url_https,
-                        });
-                    } else {
-                        media.push({
-                            type: v.type,
-                            url: v.url,
-                            result: v.type === "video" ? resultVideo : v.media_url_https,
-                        });
-                    }
-                });
+                            media.push({
+                                type: v.type,
+                                url: v.url,
+                                duration: new Date(v.video_info.duration_millis).toISOString().slice(11, 19),
+                                result: v.type === "video" ? resultVideo : v.media_url_https,
+                            });
+                        } else {
+                            media.push({
+                                type: v.type,
+                                url: v.url,
+                                result: v.type === "video" ? resultVideo : v.media_url_https,
+                            });
+                        }
+                    });
+                }
                 resolve({
                     status: "success",
                     result: {
@@ -101,9 +102,9 @@ export const TwitterDL = (url: string): Promise<TwitterResult> =>
                         hashtags: data.entities.hashtags,
                         statistics,
                         author,
-                        media,
+                        media: media.length !== 0 ? media : null,
                     },
                 });
             })
-            .catch((e) => resolve({ status: "error", message: e.message }));
+            .catch((e) => console.log(e));
     });
