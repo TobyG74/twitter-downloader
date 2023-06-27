@@ -1,6 +1,6 @@
 {
     "name": "twitter-downloader",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Scraper for download Video & Image from Twitter",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
