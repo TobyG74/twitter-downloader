@@ -24,8 +24,10 @@ yarn add twitter-downloader
 ```js
 const { TwitterDL } = require("twitter-downloader");
 
-const twitter_video_url = "https://twitter.com/AnimeWithRJ/status/1645156770266923008";
-const twitter_image_url = "https://twitter.com/GenshinImpact/status/1645308130857820161";
+const twitter_video_url =
+    "https://twitter.com/AnimeWithRJ/status/1645156770266923008";
+const twitter_image_url =
+    "https://twitter.com/GenshinImpact/status/1645308130857820161";
 
 TwitterDL(twitter_video_url).then((result) => {
     console.log(result);
@@ -39,33 +41,23 @@ TwitterDL(twitter_video_url).then((result) => {
   status: "success" | "error"
   message?: string
   result?: {
-    id: number
-    createdAt: string
+    id: string
+    created_at: string
     caption: string
-    hastags: string[]
-    statistics: {
-      retweetCount: number
-      favoriteCount: number
-      hastagCount: number
-    },
+    created_timestamp: number
+    replies: number
+    retweets: number
+    likes: number
+    possibly_sensitive: boolean
+    url: string
     author: {
+      id: string
+      name: string
       username: string
-      fullname: string
-      bio: string
-      url: string
-      createdAt: string
-      verified: boolean
-      bannerImage: string
-      avatarImage: string
-      statistics: {
-        followerCount: string
-        followingCount: string
-        listedCount: string
-        favoriteCount: string
-        statusCount: string
-        mediaCount: string
-      }
-    },
+      avatar_url: string
+      banner_url: string
+    }
+    type: string
     media: string[]
   }
 }
