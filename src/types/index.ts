@@ -1,55 +1,66 @@
-export type TwitterResult = {
+export interface Twitter {
+    code: number;
+    message: string;
+    tweet?: {
+        id: string;
+        text: string;
+        created_at: string;
+        created_timestamp: number;
+        replies: number;
+        retweets: number;
+        likes: number;
+        possibly_sensitive: false;
+        url: string;
+        author: Author;
+        lang: string;
+        twitter_card: string;
+        media: Photos[] | Videos[];
+    };
+}
+
+export interface TwitterResult {
     status: "success" | "error";
     message?: string;
     result?: {
         id: string;
-        createdAt: string;
+        created_at: string;
         caption: string;
-        hashtags: string;
-        statistics: Statistics;
+        created_timestamp: number;
+        replies: number;
+        retweets: number;
+        likes: number;
+        possibly_sensitive: false;
+        url: string;
         author: Author;
-        media: Media[];
+        type: string;
+        media: Photos[] | Videos[];
     };
-};
-
-interface Statistics {
-    retweetCount: string;
-    favoriteCount: string;
-    hashtagCount: string;
 }
 
-interface Author {
+export interface Author {
+    id: string;
+    name: string;
     username: string;
-    fullname: string;
-    location: string;
-    bio: string;
-    url: string;
-    createdAt: string;
-    verified: boolean;
-    bannerImage: string | null;
-    avatarImage: string | null;
-    statistics: AuthorStatistic;
+    avatar_url: string;
+    banner_url: string;
 }
 
-interface AuthorStatistic {
-    followerCount: string;
-    followingCount: string;
-    listedCount: string;
-    favoriteCount: string;
-    statusCount: string;
-    mediaCount: string;
-}
-
-interface Media {
+interface Photos {
     type: string;
     url: string;
-    duration: string;
-    result: VideoVariants[] | string;
+    altText: string;
 }
 
-export type VideoVariants = {
-    bitrate: string;
+interface Videos {
+    videos_urls: VideoVariants[];
+    thumbnail_url: string;
+    duration: string;
+    type: string;
+}
+
+export interface VideoVariants {
+    bitrate: number;
     content_type: string;
     resolution: string;
     url: string;
-};
+}

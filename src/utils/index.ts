@@ -1,27 +1,28 @@
 import axios from "axios";
-import { VideoVariants, TwitterResult } from "../types";
+import { Twitter, VideoVariants, TwitterResult, Author } from "../types";
 
-const _twitterapi = (id: string) => `https://api.twitter.com/1.1/statuses/show/${id}.json?tweet_mode=extended`;
+const _twitterapi = (id: string) =>
+    `https://info.tweeload.site/status/${id}.json`;
 
 // I use pastebin to update authorization when it can't be used anymore
 const getAuthorization = async () => {
-    const { data } = await axios.get("https://pastebin.com/raw/nz3ApKQM");
+    const { data } = await axios.get("https://pastebin.com/raw/SnCfd4ru");
     return data;
 };
 
-const getGuestToken = async () => {
-    try {
-        const { data } = await axios("https://api.twitter.com/1.1/guest/activate.json", {
-            method: "POST",
-            headers: {
-                Authorization: await getAuthorization(),
-            },
-        });
-        return data.guest_token;
-    } catch {
-        return null;
-    }
-};
+// const getGuestToken = async () => {
+//     try {
+//         const { data } = await axios("https://api.twitter.com/1.1/guest/activate.json", {
+//             method: "POST",
+//             headers: {
+//                 Authorization: await getAuthorization(),
+//             },
+//         });
+//         return data.guest_token;
+//     } catch {
+//         return null;
+//     }
+// };
 
 export const TwitterDL = (url: string): Promise<TwitterResult> =>
     new Promise(async (resolve, reject) => {
@@ -29,82 +30,81 @@ export const TwitterDL = (url: string): Promise<TwitterResult> =>
         if (!id)
             return resolve({
                 status: "error",
-                message: "There was an error getting twitter id. Make sure your twitter url is correct!",
+                message:
+                    "There was an error getting twitter id. Make sure your twitter url is correct!",
             });
         axios(_twitterapi(id[1]), {
             method: "GET",
             headers: {
                 Authorization: await getAuthorization(),
-                "x-guest-token": await getGuestToken(),
-                "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
+                // "x-guest-token": await getGuestToken(),
+                "user-agent":
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
             },
         })
             .then(({ data }) => {
-                const author = {
-                    username: data.user.screen_name,
-                    fullname: data.user.name,
-                    location: data.user.location,
-                    bio: data.user.description,
-                    url: "https://twitter.com" + data.user.screen_name,
-                    createdAt: data.user.created_at,
-                    verified: data.user.verified,
-                    bannerImage: data.user.profile_banner_url,
-                    avatarImage: data.user.profile_image_url_https,
-                    statistics: {
-                        followerCount: data.user.followers_count,
-                        followingCount: data.user.friends_count,
-                        listedCount: data.user.listed_count,
-                        favoriteCount: data.user.favourites_count,
-                        statusCount: data.user.statuses_count,
-                        mediaCount: data.user.media_count,
-                    },
-                };
-                const statistics = {
-                    retweetCount: data.retweet_count,
-                    favoriteCount: data.favorite_count,
-                    hashtagCount: data.entities.hashtags.length,
+                if (data.code !== 200) {
+                    return resolve({
+                        status: "error",
+                        message: "An error occurred while sending the request.",
+                    });
+                }
+                const author: Author = {
+                    id: data.tweet.author.id,
+                    name: data.tweet.author.name,
+                    username: data.tweet.author.screen_name,
+                    avatar_url: data.tweet.author.avatar_url,
+                    banner_url: data.tweet.author.banner_url,
                 };
                 let media = [];
-                if (data.extended_entities?.media) {
-                    data.extended_entities.media.forEach((v) => {
+                let type;
+                if (data.tweet?.media?.videos) {
+                    type = "video";
+                    data.tweet.media.videos.forEach((v) => {
                         const resultVideo: VideoVariants[] = [];
-                        if (v.video_info) {
-                            v.video_info.variants = v.video_info.variants.filter((x) => x.content_type === "video/mp4");
-                            v.video_info.variants.forEach((z) => {
-                                resultVideo.push({
-                                    bitrate: z.bitrate,
-                                    content_type: z.content_type,
-                                    resolution: z.url.match(/([\d ]{2,5}[x][\d ]{2,5})/)[0],
-                                    url: z.url,
-                                });
+                        v.video_urls.forEach((z) => {
+                            resultVideo.push({
+                                bitrate: z.bitrate,
+                                content_type: z.content_type,
+                                resolution: z.url.match(
+                                    /([\d ]{2,5}[x][\d ]{2,5})/
+                                )[0],
+                                url: z.url,
                             });
+                        });
+                        if (resultVideo.length !== 0) {
                             media.push({
                                 type: v.type,
-                                url: v.url,
-                                duration: new Date(v.video_info.duration_millis).toISOString().slice(11, 19),
-                                result: v.type === "video" ? resultVideo : v.media_url_https,
-                            });
-                        } else {
-                            media.push({
-                                type: v.type,
-                                url: v.url,
-                                result: v.type === "video" ? resultVideo : v.media_url_https,
+                                duration: v.duration,
+                                thumbnail_url: v.thumbnail_url,
+                                result:
+                                    v.type === "video" ? resultVideo : v.url,
                             });
                         }
+                    });
+                } else {
+                    type = "photo";
+                    data.tweet.media.photos.forEach((v) => {
+                        media.push(v);
                     });
                 }
                 resolve({
                     status: "success",
                     result: {
-                        id: data.id,
-                        createdAt: data.created_at,
-                        caption: data.full_text,
-                        hashtags: data.entities.hashtags,
-                        statistics,
+                        id: data.tweet.id,
+                        caption: data.tweet.text,
+                        created_at: data.tweet.created_at,
+                        created_timestamp: data.tweet.created_timestamp,
+                        replies: data.tweet.replies,
+                        retweets: data.tweet.retweets,
+                        likes: data.tweet.likes,
+                        url: data.tweet.url,
+                        possibly_sensitive: data.tweet.possibly_sensitive,
                         author,
+                        type,
                         media: media.length !== 0 ? media : null,
                     },
                 });
             })
-            .catch((e) => console.log(e));
+            .catch((e) => reject(e));
     });
