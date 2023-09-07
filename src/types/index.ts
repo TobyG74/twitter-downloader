@@ -29,7 +29,7 @@ export interface TwitterResult {
         replies: number;
         retweets: number;
         likes: number;
-        possibly_sensitive: false;
+        possibly_sensitive: boolean;
         url: string;
         author: Author;
         type: string;
