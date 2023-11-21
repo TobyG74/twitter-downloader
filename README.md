@@ -5,7 +5,7 @@
 
 ## Installation
 
--   twitter-downloader requires Node.js v10+ to run.
+-   twitter-downloader requires Node.js v12+ to run.
 
 ### Install from NPM
 
@@ -24,41 +24,53 @@ yarn add twitter-downloader
 ```js
 const { TwitterDL } = require("twitter-downloader");
 
-const twitter_video_url =
-    "https://twitter.com/AnimeWithRJ/status/1645156770266923008";
-const twitter_image_url =
-    "https://twitter.com/GenshinImpact/status/1645308130857820161";
+const twitter_video_url = "https://twitter.com/AnimeWithRJ/status/1645156770266923008";
+const twitter_image_url = "https://twitter.com/GenshinImpact/status/1645308130857820161";
 
-TwitterDL(twitter_video_url).then((result) => {
-    console.log(result);
-});
+TwitterDL(twitter_video_url)
+    .then((result) => {
+        console.log(result);
+    })
+    .catch((e) => {
+        console.log(e);
+    });
 ```
 
 ## Response
 
 ```ts
-{
-  status: "success" | "error"
-  message?: string
-  result?: {
+result?: {
     id: string
-    created_at: string
-    caption: string
-    created_timestamp: number
-    replies: number
-    retweets: number
-    likes: number
-    possibly_sensitive: boolean
-    url: string
+    createdAt: string
+    description: string
+    languange: string
+    possiblySensitive: boolean
+    possiblySensitiveEditable: boolean
+    isQuoteStatus: boolean
     author: {
-      id: string
-      name: string
       username: string
-      avatar_url: string
-      banner_url: string
+      bio: string
+      possiblySensitive: boolean
+      verified: boolean
+      location: string
+      profileBannerUrl: string
+      profileImageUrl: string
+      url: string
+      statistics: {
+        favoriteCount: number
+        followersCount: number
+        friendsCount: number
+        statusesCount: number
+        listedCount: number
+        mediaCount: number
+      }
     }
-    type: string
-    media: string[]
-  }
+    statistics: {
+      replieCount: number
+      retweetCount: number
+      favoriteCount: number
+      viewCount: number
+    }
+    media: Media[]
 }
 ```
