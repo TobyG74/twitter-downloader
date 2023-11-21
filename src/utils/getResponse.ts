@@ -2,7 +2,7 @@ import Axios from "axios";
 import { Twitter, VideoVariants, Author, Statistics, Media } from "../types/twitter";
 import { getGuestToken, getAuthorization } from "./index";
 
-const _twitterapi = (id: string) => `https://twitter.com/i/api/graphql/DJS3BdhUhcaEpZ7B7irJDg/TweetResultByRestId`;
+const _twitterapi = `https://twitter.com/i/api/graphql/DJS3BdhUhcaEpZ7B7irJDg/TweetResultByRestId`;
 const variables = (id: string) => {
     return { tweetId: id, withCommunity: false, includePromotedContent: false, withVoice: false };
 };
@@ -39,8 +39,12 @@ export const TwitterDL = (url: string): Promise<Twitter> =>
         const id = url.match(/\/([\d]+)/);
         if (!id) return reject("There was an error getting twitter id. Make sure your twitter url is correct!");
         const guest_token = await getGuestToken();
-        if (!guest_token) return reject("Failed to get Guest Token. Authorization is invalid!");
-        Axios(_twitterapi(id[1]), {
+        if (!guest_token)
+            return resolve({
+                status: "error",
+                message: "Failed to get Guest Token. Authorization is invalid!",
+            });
+        Axios(_twitterapi, {
             method: "GET",
             params: {
                 variables: JSON.stringify(variables(id[1])),
@@ -55,7 +59,10 @@ export const TwitterDL = (url: string): Promise<Twitter> =>
         })
             .then(({ data }) => {
                 if (!data.data.tweetResult) {
-                    return reject("Tweet not found!");
+                    return resolve({
+                        status: "error",
+                        message: "Tweet not found!",
+                    });
                 }
                 const result = data.data.tweetResult.result;
                 const statistics: Statistics = {
@@ -108,6 +115,7 @@ export const TwitterDL = (url: string): Promise<Twitter> =>
                     }
                 });
                 resolve({
+                    status: "success",
                     result: {
                         id: result.legacy.id_str,
                         createdAt: result.legacy.created_at,
@@ -123,7 +131,9 @@ export const TwitterDL = (url: string): Promise<Twitter> =>
                 });
             })
             .catch((e) => {
-                if (e?.response?.status === 403) return reject("Authorization is invalid!");
-                else reject(e);
+                return resolve({
+                    status: "error",
+                    message: e.message,
+                });
             });
     });

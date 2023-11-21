@@ -1,4 +1,6 @@
 export interface Twitter {
+    status: "success" | "error";
+    message?: string;
     result?: {
         id: string;
         createdAt: string;
