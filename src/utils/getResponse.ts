@@ -92,17 +92,17 @@ export const TwitterDL = (url: string): Promise<Twitter> =>
                 };
                 const media: Media[] = result.legacy.entities.media.map((v: any) => {
                     if (v.type === "photo") {
-                        return { type: v.type, url: v.media_url_https, expandedUrl: v.expanded_url };
+                        return { type: v.type, image: v.media_url_https, expandedUrl: v.expanded_url };
                     } else {
-                        const url: VideoVariants[] = v.video_info.variants
-                            .filter((v: any) => v.content_type === "video/mp4")
-                            .map((v: any) => {
-                                let quality = v.url.match(/\/([\d]+x[\d]+)\//)[1];
+                        const videos: VideoVariants[] = v.video_info.variants
+                            .filter((video: any) => video.content_type === "video/mp4")
+                            .map((variants: any) => {
+                                let quality = variants.url.match(/\/([\d]+x[\d]+)\//)[1];
                                 return {
-                                    bitrate: v.bitrate,
-                                    content_type: v.content_type,
+                                    bitrate: variants.bitrate,
+                                    content_type: variants.content_type,
                                     quality,
-                                    url: v.url,
+                                    url: variants.url,
                                 };
                             });
                         return {
@@ -110,7 +110,7 @@ export const TwitterDL = (url: string): Promise<Twitter> =>
                             cover: v.media_url_https,
                             duration: millsToMinutesAndSeconds(v.video_info.duration_millis),
                             expandedUrl: v.expanded_url,
-                            url,
+                            videos,
                         };
                     }
                 });

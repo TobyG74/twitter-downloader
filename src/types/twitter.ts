@@ -45,11 +45,11 @@ export interface AuthorStatistics {
 
 export interface Media {
     type: string;
-    url: string;
+    image?: string;
     expandedUrl: string;
     cover?: string;
     duration?: string;
-    variants?: VideoVariants[];
+    videos?: VideoVariants[];
 }
 
 export interface VideoVariants {
