@@ -1,1 +1,1 @@
-export * from "./utils"
+export { TwitterDL } from "./utils";
