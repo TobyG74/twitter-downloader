@@ -39,6 +39,8 @@ TwitterDL(twitter_video_url)
 ## Response
 
 ```ts
+status: "success" | "error"
+message?: string
 result?: {
     id: string
     createdAt: string
