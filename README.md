@@ -75,4 +75,25 @@ result?: {
     }
     media: Media[]
 }
+
+/** Image Media */
+{
+  type: string
+  image: string
+  expandedUrl: string
+}[]
+
+/** Video Media */
+{
+  type: string
+  expandedUrl: string
+  cover: string
+  duration: string
+  videos: {
+    bitrate: number
+    content_type: string
+    quality: string
+    url: string
+  }[]
+}[]
 ```
