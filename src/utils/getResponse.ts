@@ -28,22 +28,32 @@ const features = {
     responsive_web_enhance_cards_enabled: false,
 };
 
+type Config = {
+    authorization: string;
+    cookie: string;
+};
+
 const millsToMinutesAndSeconds = (millis: number) => {
     const minutes = Math.floor(millis / 60000);
     const seconds = ((millis % 60000) / 1000).toFixed(0);
     return `${minutes}:${Number(seconds) < 10 ? "0" : ""}${seconds}`;
 };
 
-export const TwitterDL = (url: string): Promise<Twitter> =>
+export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
     new Promise(async (resolve, reject) => {
         const id = url.match(/\/([\d]+)/);
+        const regex = /^(https?:\/\/)?(www\.)?(m\.)?twitter\.com\/\w+/;
+        /** Validate */
+        if (!regex.test(url)) return reject("Invalid twitter url!");
         if (!id) return reject("There was an error getting twitter id. Make sure your twitter url is correct!");
         const guest_token = await getGuestToken();
+        const csrf_token = config?.cookie ? config.cookie.match(/(?:^|; )ct0=([^;]*)/) : "";
         if (!guest_token)
             return resolve({
                 status: "error",
                 message: "Failed to get Guest Token. Authorization is invalid!",
             });
+        /** Get Data */
         Axios(_twitterapi, {
             method: "GET",
             params: {
@@ -51,20 +61,32 @@ export const TwitterDL = (url: string): Promise<Twitter> =>
                 features: JSON.stringify(features),
             },
             headers: {
-                Authorization: await getAuthorization(),
+                Authorization: config?.authorization ? config.authorization : await getAuthorization(),
+                Cookie: config?.cookie ? config.cookie : "",
+                "x-csrf-token": csrf_token ? csrf_token[1] : "",
                 "x-guest-token": guest_token,
                 "user-agent":
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
             },
         })
             .then(({ data }) => {
-                if (!data.data.tweetResult) {
+                if (!data.data.tweetResult?.result) {
                     return resolve({
                         status: "error",
                         message: "Tweet not found!",
                     });
                 }
-                const result = data.data.tweetResult.result;
+                if (data.data.tweetResult.result?.reason === "NsfwLoggedOut") {
+                    /** Use Cookies to avoid errors */
+                    return resolve({
+                        status: "error",
+                        message: "This tweet contains sensitive content!",
+                    });
+                }
+                const result =
+                    data.data.tweetResult.result.__typename === "TweetWithVisibilityResults"
+                        ? data.data.tweetResult.result.tweet
+                        : data.data.tweetResult.result;
                 const statistics: Statistics = {
                     replieCount: result.legacy.reply_count,
                     retweetCount: result.legacy.retweet_count,
