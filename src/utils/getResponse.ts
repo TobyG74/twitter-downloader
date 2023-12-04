@@ -91,7 +91,7 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
                     replieCount: result.legacy.reply_count,
                     retweetCount: result.legacy.retweet_count,
                     favoriteCount: result.legacy.favorite_count,
-                    viewCount: result.views.count,
+                    viewCount: Number(result.views.count),
                 };
                 const user = result.core.user_results.result;
                 const author: Author = {
@@ -112,30 +112,32 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
                         mediaCount: user.legacy.media_count,
                     },
                 };
-                const media: Media[] = result.legacy.entities.media.map((v: any) => {
-                    if (v.type === "photo") {
-                        return { type: v.type, image: v.media_url_https, expandedUrl: v.expanded_url };
-                    } else {
-                        const videos: VideoVariants[] = v.video_info.variants
-                            .filter((video: any) => video.content_type === "video/mp4")
-                            .map((variants: any) => {
-                                let quality = variants.url.match(/\/([\d]+x[\d]+)\//)[1];
-                                return {
-                                    bitrate: variants.bitrate,
-                                    content_type: variants.content_type,
-                                    quality,
-                                    url: variants.url,
-                                };
-                            });
-                        return {
-                            type: v.type,
-                            cover: v.media_url_https,
-                            duration: millsToMinutesAndSeconds(v.video_info.duration_millis),
-                            expandedUrl: v.expanded_url,
-                            videos,
-                        };
-                    }
-                });
+                /** If there is no media, the Array will be empty */
+                const media: Media[] =
+                    result.legacy?.entities?.media?.map((v: any) => {
+                        if (v.type === "photo") {
+                            return { type: v.type, image: v.media_url_https, expandedUrl: v.expanded_url };
+                        } else {
+                            const videos: VideoVariants[] = v.video_info.variants
+                                .filter((video: any) => video.content_type === "video/mp4")
+                                .map((variants: any) => {
+                                    let quality = variants.url.match(/\/([\d]+x[\d]+)\//)[1];
+                                    return {
+                                        bitrate: variants.bitrate,
+                                        content_type: variants.content_type,
+                                        quality,
+                                        url: variants.url,
+                                    };
+                                });
+                            return {
+                                type: v.type,
+                                cover: v.media_url_https,
+                                duration: millsToMinutesAndSeconds(v.video_info.duration_millis),
+                                expandedUrl: v.expanded_url,
+                                videos,
+                            };
+                        }
+                    }) || [];
                 resolve({
                     status: "success",
                     result: {
@@ -143,9 +145,10 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
                         createdAt: result.legacy.created_at,
                         description: result.legacy.full_text,
                         languange: result.legacy.lang,
-                        possiblySensitive: result.legacy.possibly_sensitive,
-                        possiblySensitiveEditable: result.legacy.possibly_sensitive_editable,
+                        possiblySensitive: result.legacy.possibly_sensitive || false,
+                        possiblySensitiveEditable: result.legacy.possibly_sensitive_editable || false,
                         isQuoteStatus: result.legacy.is_quote_status,
+                        mediaCount: media.length,
                         author,
                         statistics,
                         media,
