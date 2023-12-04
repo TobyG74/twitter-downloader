@@ -9,6 +9,7 @@ export interface Twitter {
         possiblySensitive: boolean;
         possiblySensitiveEditable: boolean;
         isQuoteStatus: boolean;
+        mediaCount: number;
         author: Author;
         statistics: Statistics;
         media: Media[];
