@@ -107,6 +107,7 @@ result?: {
     possiblySensitive: boolean
     possiblySensitiveEditable: boolean
     isQuoteStatus: boolean
+    mediaCount: number
     author: {
       username: string
       bio: string
