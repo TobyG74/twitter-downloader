@@ -118,10 +118,11 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
                         if (v.type === "photo") {
                             return { type: v.type, image: v.media_url_https, expandedUrl: v.expanded_url };
                         } else {
+                            const isGif = v.type === "animated_gif";
                             const videos: VideoVariants[] = v.video_info.variants
                                 .filter((video: any) => video.content_type === "video/mp4")
                                 .map((variants: any) => {
-                                    let quality = variants.url.match(/\/([\d]+x[\d]+)\//)[1];
+                                    let quality = isGif ? `${v.original_info.width}x${v.original_info.height}` : variants.url.match(/\/([\d]+x[\d]+)\//)[1];
                                     return {
                                         bitrate: variants.bitrate,
                                         content_type: variants.content_type,
