@@ -1,37 +1,18 @@
 import Axios from "axios";
-import { Twitter, VideoVariants, Author, Statistics, Media } from "../types/twitter";
-import { getGuestToken, getAuthorization } from "./index";
 
-const _twitterapi = `https://twitter.com/i/api/graphql/DJS3BdhUhcaEpZ7B7irJDg/TweetResultByRestId`;
-const variables = (id: string) => {
-    return { tweetId: id, withCommunity: false, includePromotedContent: false, withVoice: false };
-};
-const features = {
-    creator_subscriptions_tweet_preview_api_enabled: true,
-    tweetypie_unmention_optimization_enabled: true,
-    responsive_web_edit_tweet_api_enabled: true,
-    graphql_is_translatable_rweb_tweet_is_translatable_enabled: true,
-    view_counts_everywhere_api_enabled: true,
-    longform_notetweets_consumption_enabled: true,
-    responsive_web_twitter_article_tweet_consumption_enabled: false,
-    tweet_awards_web_tipping_enabled: false,
-    freedom_of_speech_not_reach_fetch_enabled: true,
-    standardized_nudges_misinfo: true,
-    tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled: true,
-    longform_notetweets_rich_text_read_enabled: true,
-    longform_notetweets_inline_media_enabled: true,
-    responsive_web_graphql_exclude_directive_enabled: true,
-    verified_phone_label_enabled: false,
-    responsive_web_media_download_video_enabled: false,
-    responsive_web_graphql_skip_user_profile_image_extensions_enabled: false,
-    responsive_web_graphql_timeline_navigation_enabled: true,
-    responsive_web_enhance_cards_enabled: false,
-};
+/** Types */
+import {
+    Twitter,
+    VideoVariants,
+    Author,
+    Statistics,
+    Media,
+} from "../types/twitter";
+import { Config } from "../types/config";
 
-type Config = {
-    authorization: string;
-    cookie: string;
-};
+/** Functions */
+import { getGuestToken, getTwitterAuthorization } from "./index";
+import { features, variables } from "../contants";
 
 const millsToMinutesAndSeconds = (millis: number) => {
     const minutes = Math.floor(millis / 60000);
@@ -39,29 +20,47 @@ const millsToMinutesAndSeconds = (millis: number) => {
     return `${minutes}:${Number(seconds) < 10 ? "0" : ""}${seconds}`;
 };
 
+const _twitterapi = `https://twitter.com/i/api/graphql`;
+const _tweetresultbyrestid = "/TweetResultByRestId";
+const _id = "/DJS3BdhUhcaEpZ7B7irJDg";
+
 export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
-    new Promise(async (resolve, reject) => {
+    new Promise(async (resolve) => {
         const id = url.match(/\/([\d]+)/);
         const regex = /^(https?:\/\/)?(www\.)?(m\.)?twitter\.com\/\w+/;
+
         /** Validate */
-        if (!regex.test(url)) return reject("Invalid twitter url!");
-        if (!id) return reject("There was an error getting twitter id. Make sure your twitter url is correct!");
+        if (!regex.test(url))
+            return resolve({ status: "error", message: "Invalid URL!" });
+        if (!id)
+            return resolve({
+                status: "error",
+                message:
+                    "There was an error getting twitter id. Make sure your twitter url is correct!",
+            });
+
         const guest_token = await getGuestToken();
-        const csrf_token = config?.cookie ? config.cookie.match(/(?:^|; )ct0=([^;]*)/) : "";
+        const csrf_token = config?.cookie
+            ? config.cookie.match(/(?:^|; )ct0=([^;]*)/)
+            : "";
+
         if (!guest_token)
             return resolve({
                 status: "error",
                 message: "Failed to get Guest Token. Authorization is invalid!",
             });
+
         /** Get Data */
-        Axios(_twitterapi, {
+        Axios(_twitterapi + _id + _tweetresultbyrestid, {
             method: "GET",
             params: {
                 variables: JSON.stringify(variables(id[1])),
                 features: JSON.stringify(features),
             },
             headers: {
-                Authorization: config?.authorization ? config.authorization : await getAuthorization(),
+                Authorization: config?.authorization
+                    ? config.authorization
+                    : await getTwitterAuthorization(),
                 Cookie: config?.cookie ? config.cookie : "",
                 "x-csrf-token": csrf_token ? csrf_token[1] : "",
                 "x-guest-token": guest_token,
@@ -80,11 +79,13 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
                     /** Use Cookies to avoid errors */
                     return resolve({
                         status: "error",
-                        message: "This tweet contains sensitive content!",
+                        message:
+                            "This tweet contains sensitive content! Please use cookies to avoid errors!",
                     });
                 }
                 const result =
-                    data.data.tweetResult.result.__typename === "TweetWithVisibilityResults"
+                    data.data.tweetResult.result.__typename ===
+                    "TweetWithVisibilityResults"
                         ? data.data.tweetResult.result.tweet
                         : data.data.tweetResult.result;
                 const statistics: Statistics = {
@@ -116,24 +117,38 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
                 const media: Media[] =
                     result.legacy?.entities?.media?.map((v: any) => {
                         if (v.type === "photo") {
-                            return { type: v.type, image: v.media_url_https, expandedUrl: v.expanded_url };
+                            return {
+                                type: v.type,
+                                image: v.media_url_https,
+                                expandedUrl: v.expanded_url,
+                            };
                         } else {
                             const isGif = v.type === "animated_gif";
-                            const videos: VideoVariants[] = v.video_info.variants
-                                .filter((video: any) => video.content_type === "video/mp4")
-                                .map((variants: any) => {
-                                    let quality = isGif ? `${v.original_info.width}x${v.original_info.height}` : variants.url.match(/\/([\d]+x[\d]+)\//)[1];
-                                    return {
-                                        bitrate: variants.bitrate,
-                                        content_type: variants.content_type,
-                                        quality,
-                                        url: variants.url,
-                                    };
-                                });
+                            const videos: VideoVariants[] =
+                                v.video_info.variants
+                                    .filter(
+                                        (video: any) =>
+                                            video.content_type === "video/mp4"
+                                    )
+                                    .map((variants: any) => {
+                                        let quality = isGif
+                                            ? `${v.original_info.width}x${v.original_info.height}`
+                                            : variants.url.match(
+                                                  /\/([\d]+x[\d]+)\//
+                                              )[1];
+                                        return {
+                                            bitrate: variants.bitrate,
+                                            content_type: variants.content_type,
+                                            quality,
+                                            url: variants.url,
+                                        };
+                                    });
                             return {
                                 type: v.type,
                                 cover: v.media_url_https,
-                                duration: millsToMinutesAndSeconds(v.video_info.duration_millis),
+                                duration: millsToMinutesAndSeconds(
+                                    v.video_info.duration_millis
+                                ),
                                 expandedUrl: v.expanded_url,
                                 videos,
                             };
@@ -146,8 +161,10 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
                         createdAt: result.legacy.created_at,
                         description: result.legacy.full_text,
                         languange: result.legacy.lang,
-                        possiblySensitive: result.legacy.possibly_sensitive || false,
-                        possiblySensitiveEditable: result.legacy.possibly_sensitive_editable || false,
+                        possiblySensitive:
+                            result.legacy.possibly_sensitive || false,
+                        possiblySensitiveEditable:
+                            result.legacy.possibly_sensitive_editable || false,
                         isQuoteStatus: result.legacy.is_quote_status,
                         mediaCount: media.length,
                         author,
