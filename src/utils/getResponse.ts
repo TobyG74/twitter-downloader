@@ -1,18 +1,14 @@
 import Axios from "axios";
 
 /** Types */
-import {
-    Twitter,
-    VideoVariants,
-    Author,
-    Statistics,
-    Media,
-} from "../types/twitter";
+import { Twitter, VideoVariants, Author, Statistics, Media } from "../types/twitter";
 import { Config } from "../types/config";
 
 /** Functions */
-import { getGuestToken, getTwitterAuthorization } from "./index";
-import { features, variables } from "../contants";
+import { getGuestToken } from "./getGuestToken";
+import { getTwitterAuthorization } from "./getAuthorization";
+import { features, variables } from "../contants/params";
+import { _tweetresultbyrestid, _twitterPostID, _twitterapi } from "../contants/api";
 
 const millsToMinutesAndSeconds = (millis: number) => {
     const minutes = Math.floor(millis / 60000);
@@ -20,29 +16,21 @@ const millsToMinutesAndSeconds = (millis: number) => {
     return `${minutes}:${Number(seconds) < 10 ? "0" : ""}${seconds}`;
 };
 
-const _twitterapi = `https://twitter.com/i/api/graphql`;
-const _tweetresultbyrestid = "/TweetResultByRestId";
-const _id = "/DJS3BdhUhcaEpZ7B7irJDg";
-
 export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
     new Promise(async (resolve) => {
         const id = url.match(/\/([\d]+)/);
-        const regex = /^(https?:\/\/)?(www\.)?(m\.)?twitter\.com\/\w+/;
+        const regex = /^(https?:\/\/)?(www\.)?(m\.)?twitter|x\.com\/\w+/;
 
         /** Validate */
-        if (!regex.test(url))
-            return resolve({ status: "error", message: "Invalid URL!" });
+        if (!regex.test(url)) return resolve({ status: "error", message: "Invalid URL!" });
         if (!id)
             return resolve({
                 status: "error",
-                message:
-                    "There was an error getting twitter id. Make sure your twitter url is correct!",
+                message: "There was an error getting twitter id. Make sure your twitter url is correct!",
             });
 
         const guest_token = await getGuestToken();
-        const csrf_token = config?.cookie
-            ? config.cookie.match(/(?:^|; )ct0=([^;]*)/)
-            : "";
+        const csrf_token = config?.cookie ? config.cookie.match(/(?:^|; )ct0=([^;]*)/) : "";
 
         if (!guest_token)
             return resolve({
@@ -51,16 +39,14 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
             });
 
         /** Get Data */
-        Axios(_twitterapi + _id + _tweetresultbyrestid, {
+        Axios(_twitterapi(_twitterPostID, _tweetresultbyrestid), {
             method: "GET",
             params: {
                 variables: JSON.stringify(variables(id[1])),
                 features: JSON.stringify(features),
             },
             headers: {
-                Authorization: config?.authorization
-                    ? config.authorization
-                    : await getTwitterAuthorization(),
+                Authorization: config?.authorization ? config.authorization : await getTwitterAuthorization(),
                 Cookie: config?.cookie ? config.cookie : "",
                 "x-csrf-token": csrf_token ? csrf_token[1] : "",
                 "x-guest-token": guest_token,
@@ -79,13 +65,11 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
                     /** Use Cookies to avoid errors */
                     return resolve({
                         status: "error",
-                        message:
-                            "This tweet contains sensitive content! Please use cookies to avoid errors!",
+                        message: "This tweet contains sensitive content! Please use cookies to avoid errors!",
                     });
                 }
                 const result =
-                    data.data.tweetResult.result.__typename ===
-                    "TweetWithVisibilityResults"
+                    data.data.tweetResult.result.__typename === "TweetWithVisibilityResults"
                         ? data.data.tweetResult.result.tweet
                         : data.data.tweetResult.result;
                 const statistics: Statistics = {
@@ -124,31 +108,23 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
                             };
                         } else {
                             const isGif = v.type === "animated_gif";
-                            const videos: VideoVariants[] =
-                                v.video_info.variants
-                                    .filter(
-                                        (video: any) =>
-                                            video.content_type === "video/mp4"
-                                    )
-                                    .map((variants: any) => {
-                                        let quality = isGif
-                                            ? `${v.original_info.width}x${v.original_info.height}`
-                                            : variants.url.match(
-                                                  /\/([\d]+x[\d]+)\//
-                                              )[1];
-                                        return {
-                                            bitrate: variants.bitrate,
-                                            content_type: variants.content_type,
-                                            quality,
-                                            url: variants.url,
-                                        };
-                                    });
+                            const videos: VideoVariants[] = v.video_info.variants
+                                .filter((video: any) => video.content_type === "video/mp4")
+                                .map((variants: any) => {
+                                    let quality = isGif
+                                        ? `${v.original_info.width}x${v.original_info.height}`
+                                        : variants.url.match(/\/([\d]+x[\d]+)\//)[1];
+                                    return {
+                                        bitrate: variants.bitrate,
+                                        content_type: variants.content_type,
+                                        quality,
+                                        url: variants.url,
+                                    };
+                                });
                             return {
                                 type: v.type,
                                 cover: v.media_url_https,
-                                duration: millsToMinutesAndSeconds(
-                                    v.video_info.duration_millis
-                                ),
+                                duration: millsToMinutesAndSeconds(v.video_info.duration_millis),
                                 expandedUrl: v.expanded_url,
                                 videos,
                             };
@@ -161,10 +137,8 @@ export const TwitterDL = (url: string, config?: Config): Promise<Twitter> =>
                         createdAt: result.legacy.created_at,
                         description: result.legacy.full_text,
                         languange: result.legacy.lang,
-                        possiblySensitive:
-                            result.legacy.possibly_sensitive || false,
-                        possiblySensitiveEditable:
-                            result.legacy.possibly_sensitive_editable || false,
+                        possiblySensitive: result.legacy.possibly_sensitive || false,
+                        possiblySensitiveEditable: result.legacy.possibly_sensitive_editable || false,
                         isQuoteStatus: result.legacy.is_quote_status,
                         mediaCount: media.length,
                         author,

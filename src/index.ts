@@ -1,1 +1,1 @@
-export { TwitterDL } from "./utils";
+export { TwitterDL } from "./utils/getResponse";
