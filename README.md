@@ -85,6 +85,7 @@ const twitter_image_url = "https://twitter.com/GenshinImpact/status/164530813085
 TwitterDL(twitter_video_url, {
   authorization?: "YOUR_AUTHORIZATION", // undefined == use default authorization
   cookie?: "YOUR_COOKIE" // to display sensitive / nsfw content (no default cookies)
+  proxy?: "YOUR_PROXY" // support http, https, socks5
 })
     .then((result) => {
         console.log(result);
@@ -130,6 +131,7 @@ result?: {
       replieCount: number
       retweetCount: number
       favoriteCount: number
+      bookmarkCount: number
       viewCount: number
     }
     media: Media[]
