@@ -46,7 +46,7 @@
 -   If it doesn't appear, refresh the page
 
 <br>
-<img src="https://i.ibb.co/xsn3xNj/Tobz-Twitter-Network.png" height="640" width="626">\
+<img src="https://i.ibb.co/xsn3xNj/Tobz-Twitter-Network.png" height="640" width="626">
 <br>
 <br>
 
@@ -82,11 +82,13 @@ const { TwitterDL } = require("twitter-downloader");
 const twitter_video_url = "https://twitter.com/AnimeWithRJ/status/1645156770266923008";
 const twitter_image_url = "https://twitter.com/GenshinImpact/status/1645308130857820161";
 
-TwitterDL(twitter_video_url, {
+const options = {
   authorization?: "YOUR_AUTHORIZATION", // undefined == use default authorization
   cookie?: "YOUR_COOKIE" // to display sensitive / nsfw content (no default cookies)
   proxy?: "YOUR_PROXY" // support http, https, socks5
-})
+}
+
+TwitterDL(twitter_video_url, options)
     .then((result) => {
         console.log(result);
     })
@@ -94,6 +96,12 @@ TwitterDL(twitter_video_url, {
         console.log(e);
     });
 ```
+
+## Options
+
+-   `authorization` - Authorization header for request
+-   `cookie` - Cookie for view sensitive / nsfw content
+-   `proxy` - Proxy for request (http, https, socks5)
 
 ## Response
 
@@ -158,3 +166,11 @@ result?: {
   }[]
 }[]
 ```
+
+## Contributing
+
+This project is open to contributions. Whether you are a beginner or an experienced developer, you can contribute to this project. If you are interested in contributing to this project, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file before submitting a pull request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
