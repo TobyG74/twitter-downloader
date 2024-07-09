@@ -25,6 +25,8 @@
     -   [From Github](#from-github)
 -   [Usage](#usage)
 -   [Response](#response)
+-   [Contributing](#contributing)
+-   [License](#license)
 
 # Description
 
@@ -76,6 +78,10 @@ npm install github:TobyG74/twitter-downloader
 
 ## Usage
 
+-   `authorization` - Authorization header for request
+-   `cookie` - Cookie for view sensitive / nsfw content
+-   `proxy` - Proxy for request (http, https, socks5)
+
 ```js
 const { TwitterDL } = require("twitter-downloader");
 
@@ -96,12 +102,6 @@ TwitterDL(twitter_video_url, options)
         console.log(e);
     });
 ```
-
-## Options
-
--   `authorization` - Authorization header for request
--   `cookie` - Cookie for view sensitive / nsfw content
--   `proxy` - Proxy for request (http, https, socks5)
 
 ## Response
 
