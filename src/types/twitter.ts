@@ -20,6 +20,7 @@ export interface Statistics {
     replieCount: number;
     retweetCount: number;
     favoriteCount: number;
+    bookmarkCount: number;
     viewCount: number;
 }
 

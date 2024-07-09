@@ -108,6 +108,7 @@ export const TwitterDL = (
                     replieCount: result.legacy.reply_count,
                     retweetCount: result.legacy.retweet_count,
                     favoriteCount: result.legacy.favorite_count,
+                    bookmarkCount: result.legacy.bookmark_count,
                     viewCount: Number(result.views.count),
                 };
                 const user = result.core.user_results.result;
